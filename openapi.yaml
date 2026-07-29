@@ -1,0 +1,57 @@
+openapi: 3.0.1
+info:
+  title: Palo Alto PAN-OS Security Rules
+  version: 1.0.0
+  description: Read-only PAN-OS integration for Microsoft Security Copilot.
+servers:
+  - url: https://57.167.90.200
+paths:
+  /restapi/v11.1/Policies/SecurityRules:
+    get:
+      operationId: ListSecurityRules
+      summary: List PAN-OS security policy rules
+      description: |
+        Retrieves security policy rules from the selected location and virtual system.
+        #ExamplePrompts List the security rules on the Palo Alto firewall
+        #ExamplePrompts Show security rules for vsys1
+      parameters:
+        - name: location
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [vsys]
+            default: vsys
+        - name: vsys
+          in: query
+          required: true
+          schema:
+            type: string
+            default: vsys1
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Security rules returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '401':
+          description: Authentication failed
+        '403':
+          description: API account is not authorized
+        '500':
+          description: PAN-OS API error
+components:
+  securitySchemes:
+    PanOsApiKey:
+      type: apiKey
+      in: header
+      name: X-PAN-KEY
+security:
+  - PanOsApiKey: []
