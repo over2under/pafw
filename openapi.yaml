@@ -1,0 +1,63 @@
+openapi: 3.0.1
+info:
+  title: Palo Alto Firewall Rules
+  version: 1.1.0
+  description: Retrieve Palo Alto firewall security rules.
+servers:
+  - url: https://57.167.90.200
+paths:
+  /restapi/v11.1/Policies/SecurityRules:
+    get:
+      operationId: ListSecurityRules
+      summary: List firewall security rules
+      description: |
+        Returns all Palo Alto firewall security rules.
+        Use for firewall rules, security policies, allow rules, and deny rules.
+      parameters:
+        - name: location
+          in: query
+          required: true
+          schema:
+            type: string
+            default: vsys
+        - name: vsys
+          in: query
+          required: true
+          schema:
+            type: string
+            default: vsys1
+      responses:
+        '200':
+          description: List of Palo Alto security rules
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: object
+                    properties:
+                      entry:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            '@name':
+                              type: string
+                            action:
+                              type: string
+              example:
+                result:
+                  entry:
+                    - '@name': 'azure-healthprobe-allow'
+                      action: allow
+                    - '@name': 'Block_Threat_Intel'
+                      action: deny
+components:
+  securitySchemes:
+    PanApiKey:
+      type: apiKey
+      in: header
+      name: X-PAN-KEY
+security:
+  - PanApiKey: []
