@@ -1,0 +1,73 @@
+openapi: 3.0.0
+info:
+  title: Palo Alto PAN-OS Firewall Rules API
+  description: Read-only API definition for listing PAN-OS security policy rules.
+  version: "1.0.0"
+servers:
+  - url: https://57.167.90.200
+paths:
+  /restapi/v11.1/Policies/SecurityRules:
+    get:
+      operationId: ListPaloAltoSecurityRules
+      summary: List Palo Alto firewall security policy rules
+      description: |-
+        Retrieves security policy rules from the selected PAN-OS virtual system.
+        #ExamplePrompts List the Palo Alto firewall security rules in vsys1.
+        #ExamplePrompts Show all security policy rules configured on the Palo Alto firewall.
+        #ExamplePrompts Retrieve the firewall rule named Block-Malicious-IP from vsys1.
+      parameters:
+        - name: location
+          in: query
+          required: true
+          description: PAN-OS configuration location. Use vsys for a firewall virtual system.
+          schema:
+            type: string
+            enum:
+              - vsys
+            default: vsys
+        - name: vsys
+          in: query
+          required: true
+          description: Virtual system that contains the security rules.
+          schema:
+            type: string
+            default: vsys1
+        - name: name
+          in: query
+          required: false
+          description: Optional exact security rule name to retrieve.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Security rules returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PanOsResponse"
+        "400":
+          description: The request parameters are invalid.
+        "401":
+          description: The API key is missing or invalid.
+        "403":
+          description: The API administrator does not have permission to read the requested configuration.
+        "404":
+          description: The requested PAN-OS REST resource was not found.
+        "500":
+          description: The firewall returned an internal server error.
+components:
+  schemas:
+    PanOsResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        _request:
+          type: object
+          additionalProperties: true
+        result:
+          type: object
+          additionalProperties: true
+        success:
+          type: boolean
+        message:
+          type: string
