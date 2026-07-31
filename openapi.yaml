@@ -3,53 +3,67 @@ openapi: 3.0.1
 info:
   title: Palo Alto Firewall Rules
   version: 1.0.0
-  description: Retrieve Palo Alto firewall security rules through the PAN-OS REST API.
+
+  description: |
+    Retrieve Palo Alto firewall security policies.
 
 servers:
   - url: https://57.167.90.200
-    description: Palo Alto firewall management interface
 
 paths:
   /restapi/v11.1/Policies/SecurityRules:
     get:
       operationId: ListSecurityRules
-      summary: List Palo Alto security rules
-      description: Retrieves security rules from vsys1 on the Palo Alto firewall.
+
+      summary: List Palo Alto Security Rules
+
+      description: |
+        Retrieves all Palo Alto firewall security policy rules.
+
+        Example prompts:
+        - List firewall rules
+        - Show Palo Alto security policies
+        - Display access control rules
+        - Retrieve firewall configuration
+        - Show security rules from vsys1
+
       parameters:
         - name: location
           in: query
           required: true
-          description: Configuration location containing the security rules.
           schema:
             type: string
-            enum:
-              - vsys
             default: vsys
+
         - name: vsys
           in: query
           required: true
-          description: Virtual system containing the security rules.
           schema:
             type: string
             default: vsys1
+
       security:
         - PanApiKey: []
+
       responses:
-        '200':
-          description: Security rules retrieved successfully.
+        "200":
+          description: Firewall rules successfully returned.
           content:
             application/json:
               schema:
                 type: object
-                additionalProperties: true
-        '400':
-          description: Invalid request or missing parameters.
-        '401':
-          description: API key authentication failed.
-        '403':
-          description: The API administrator does not have permission to read security rules.
-        '500':
-          description: Palo Alto firewall API error.
+
+        "400":
+          description: Bad request.
+
+        "401":
+          description: Authentication failed.
+
+        "403":
+          description: Authorization failed.
+
+        "500":
+          description: Firewall error.
 
 components:
   securitySchemes:
