@@ -1,97 +1,109 @@
 openapi: 3.0.1
 info:
-  title: Palo Alto Firewall Read-Only REST API
-  version: "1.0.0"
-  description: >-
-    Read-only API operations for listing Palo Alto Networks security rules,
-    address objects, and address groups from vsys1.
+  title: Palo Alto PAN-OS Security Copilot Plugin
+  version: 2.0.0
+  description: |
+    Microsoft Security Copilot plugin for Palo Alto Networks PAN-OS.
+
+    This API allows Security Copilot to:
+    - List firewall security rules
+    - List address objects
+    - List address groups
+
 servers:
   - url: http://57.167.90.200/restapi/v11.1
+
 paths:
   /Policies/SecurityRules:
     get:
       operationId: ListFirewallRules
-      summary: List firewall security rules
-      description: >-
-        Lists configured security policy rules in vsys1. Use when a user asks
-        for firewall rules, security rules, policy rules, sources,
-        destinations, applications, services, or actions.
+      summary: List Palo Alto firewall security rules
+      description: |
+        Retrieve all security policy rules configured in vsys1.
+
+        Use this operation when a user requests:
+        - List firewall rules
+        - Show security rules
+        - Display firewall policies
+        - Show allow and deny rules
+        - List PAN-OS security rules
       parameters:
-        - $ref: '#/components/parameters/Location'
-        - $ref: '#/components/parameters/Vsys'
+        - name: location
+          in: query
+          required: true
+          schema:
+            type: string
+            default: vsys
+        - name: vsys
+          in: query
+          required: true
+          schema:
+            type: string
+            default: vsys1
       responses:
-        "200":
+        '200':
           description: Security rules returned successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PanOsResponse'
-        "400": { description: Invalid request. }
-        "401": { description: Missing or invalid API key. }
-        "403": { description: API account is not authorized. }
-        "500": { description: Firewall API error. }
+
   /Objects/Addresses:
     get:
       operationId: ListAddressObjects
-      summary: List address objects
-      description: >-
-        Lists address objects configured in vsys1, including names and values.
+      summary: List Palo Alto address objects
+      description: |
+        Retrieve all address objects configured in vsys1.
+
+        Use this operation when a user requests:
+        - List address objects
+        - Show address objects
+        - Display IP objects
+        - Show firewall address entries
+        - Retrieve address definitions
+
+        Returns object names, types, and values.
       parameters:
-        - $ref: '#/components/parameters/Location'
-        - $ref: '#/components/parameters/Vsys'
+        - name: location
+          in: query
+          required: true
+          schema:
+            type: string
+            default: vsys
+        - name: vsys
+          in: query
+          required: true
+          schema:
+            type: string
+            default: vsys1
       responses:
-        "200":
+        '200':
           description: Address objects returned successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PanOsResponse'
-        "400": { description: Invalid request. }
-        "401": { description: Missing or invalid API key. }
-        "403": { description: API account is not authorized. }
-        "500": { description: Firewall API error. }
+
   /Objects/AddressGroups:
     get:
       operationId: ListAddressGroups
-      summary: List address groups
-      description: >-
-        Lists static or dynamic address groups configured in vsys1 and their members.
+      summary: List Palo Alto address groups
+      description: |
+        Retrieve all address groups configured in vsys1.
+
+        Use this operation when a user requests:
+        - List address groups
+        - Show address groups
+        - Display object groups
+        - Show members of address groups
+        - List AbuseCH_Blocked_IPs members
+
+        Returns group names and group membership.
       parameters:
-        - $ref: '#/components/parameters/Location'
-        - $ref: '#/components/parameters/Vsys'
+        - name: location
+          in: query
+          required: true
+          schema:
+            type: string
+            default: vsys
+        - name: vsys
+          in: query
+          required: true
+          schema:
+            type: string
+            default: vsys1
       responses:
-        "200":
+        '200':
           description: Address groups returned successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PanOsResponse'
-        "400": { description: Invalid request. }
-        "401": { description: Missing or invalid API key. }
-        "403": { description: API account is not authorized. }
-        "500": { description: Firewall API error. }
-components:
-  parameters:
-    Location:
-      name: location
-      in: query
-      required: true
-      description: Palo Alto configuration location.
-      schema:
-        type: string
-        enum: [vsys]
-        default: vsys
-    Vsys:
-      name: vsys
-      in: query
-      required: true
-      description: Virtual system to query.
-      schema:
-        type: string
-        enum: [vsys1]
-        default: vsys1
-  schemas:
-    PanOsResponse:
-      type: object
-      additionalProperties: true
-      description: Native PAN-OS REST API JSON response.
