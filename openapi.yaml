@@ -1,89 +1,132 @@
 openapi: 3.0.1
 info:
-  title: Palo Alto Firewall Reader
-  version: 1.0.0
-  description: |
-    API used by the PaloAltoFirewallReader Security Copilot plugin.
-
-    Available operations:
-    - List firewall security rules
-    - List address objects
-    - List address groups
-
+  title: Palo Alto PAN-OS Read-Only API
+  version: "1.1.0"
+  description: >-
+    Read-only PAN-OS 11.1 REST API operations for listing security rules,
+    address objects, and address groups. Authentication is supplied by the
+    Security Copilot plugin in the X-PAN-KEY request header.
 servers:
-  - url: http://57.167.90.200/restapi/v11.1
-
+  - url: https://57.167.90.200
 paths:
-  /Policies/SecurityRules:
+  /restapi/v11.1/Policies/SecurityRules:
     get:
-      operationId: ListFirewallRules
-      summary: List Palo Alto firewall security rules
-      description: |
-        Retrieve all PAN-OS security rules from vsys1.
-        Use when a user asks to list, show, display, review, or retrieve firewall rules.
+      operationId: ListSecurityRules
+      summary: List PAN-OS security policy rules
+      description: >-
+        Lists security policy rules from the selected PAN-OS configuration
+        location and virtual system. Use this operation when the user asks to
+        list, show, retrieve, or review firewall or security rules.
       parameters:
-        - name: location
-          in: query
-          required: true
-          schema:
-            type: string
-            default: vsys
-        - name: vsys
-          in: query
-          required: true
-          schema:
-            type: string
-            default: vsys1
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
       responses:
         '200':
-          description: Security rules returned.
-
-  /Objects/Addresses:
+          description: Security rules returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanOsResponse'
+        '400':
+          description: Invalid request or query parameter.
+        '401':
+          description: API key missing or invalid.
+        '403':
+          description: The API account is not authorized for this operation.
+        '500':
+          description: PAN-OS returned an internal error.
+  /restapi/v11.1/Objects/Addresses:
     get:
       operationId: ListAddressObjects
-      summary: List Palo Alto address objects
-      description: |
-        Retrieve all address objects from vsys1.
-        Use when a user asks to list address objects, IP objects, host objects,
-        network objects, or firewall address entries.
+      summary: List PAN-OS address objects
+      description: >-
+        Lists address objects from the selected PAN-OS configuration location
+        and virtual system. An exact object name can optionally be supplied.
       parameters:
-        - name: location
-          in: query
-          required: true
-          schema:
-            type: string
-            default: vsys
-        - name: vsys
-          in: query
-          required: true
-          schema:
-            type: string
-            default: vsys1
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
+        - $ref: '#/components/parameters/ObjectName'
       responses:
         '200':
-          description: Address objects returned.
-
-  /Objects/AddressGroups:
+          description: Address objects returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanOsResponse'
+        '400':
+          description: Invalid request or query parameter.
+        '401':
+          description: API key missing or invalid.
+        '403':
+          description: The API account is not authorized for this operation.
+        '500':
+          description: PAN-OS returned an internal error.
+  /restapi/v11.1/Objects/AddressGroups:
     get:
       operationId: ListAddressGroups
-      summary: List Palo Alto address groups
-      description: |
-        Retrieve all address groups from vsys1.
-        Use when a user asks to list address groups, object groups,
-        group members, or AbuseCH_Blocked_IPs membership.
+      summary: List PAN-OS address groups
+      description: >-
+        Lists address groups from the selected PAN-OS configuration location
+        and virtual system. An exact group name can optionally be supplied.
       parameters:
-        - name: location
-          in: query
-          required: true
-          schema:
-            type: string
-            default: vsys
-        - name: vsys
-          in: query
-          required: true
-          schema:
-            type: string
-            default: vsys1
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
+        - $ref: '#/components/parameters/ObjectName'
       responses:
         '200':
-          description: Address groups returned.
+          description: Address groups returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanOsResponse'
+        '400':
+          description: Invalid request or query parameter.
+        '401':
+          description: API key missing or invalid.
+        '403':
+          description: The API account is not authorized for this operation.
+        '500':
+          description: PAN-OS returned an internal error.
+components:
+  parameters:
+    Location:
+      in: query
+      name: location
+      required: true
+      description: >-
+        PAN-OS configuration location. Use vsys for a local firewall virtual
+        system. Use shared or device-group only when applicable to the target.
+      schema:
+        type: string
+        enum:
+          - vsys
+          - shared
+          - device-group
+        default: vsys
+    Vsys:
+      in: query
+      name: vsys
+      required: true
+      description: Virtual system name, such as vsys1.
+      schema:
+        type: string
+        default: vsys1
+    ObjectName:
+      in: query
+      name: name
+      required: false
+      description: Optional exact address object or address group name.
+      schema:
+        type: string
+  schemas:
+    PanOsResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        '@status':
+          type: string
+        '@code':
+          type: string
+        result:
+          type: object
+          additionalProperties: true
