@@ -1,11 +1,11 @@
 openapi: 3.0.1
 info:
-  title: Palo Alto PAN-OS Security Copilot Plugin
-  version: 2.0.0
+  title: Palo Alto Firewall Reader
+  version: 1.0.0
   description: |
-    Microsoft Security Copilot plugin for Palo Alto Networks PAN-OS.
+    API used by the PaloAltoFirewallReader Security Copilot plugin.
 
-    This API allows Security Copilot to:
+    Available operations:
     - List firewall security rules
     - List address objects
     - List address groups
@@ -19,14 +19,8 @@ paths:
       operationId: ListFirewallRules
       summary: List Palo Alto firewall security rules
       description: |
-        Retrieve all security policy rules configured in vsys1.
-
-        Use this operation when a user requests:
-        - List firewall rules
-        - Show security rules
-        - Display firewall policies
-        - Show allow and deny rules
-        - List PAN-OS security rules
+        Retrieve all PAN-OS security rules from vsys1.
+        Use when a user asks to list, show, display, review, or retrieve firewall rules.
       parameters:
         - name: location
           in: query
@@ -42,23 +36,16 @@ paths:
             default: vsys1
       responses:
         '200':
-          description: Security rules returned successfully.
+          description: Security rules returned.
 
   /Objects/Addresses:
     get:
       operationId: ListAddressObjects
       summary: List Palo Alto address objects
       description: |
-        Retrieve all address objects configured in vsys1.
-
-        Use this operation when a user requests:
-        - List address objects
-        - Show address objects
-        - Display IP objects
-        - Show firewall address entries
-        - Retrieve address definitions
-
-        Returns object names, types, and values.
+        Retrieve all address objects from vsys1.
+        Use when a user asks to list address objects, IP objects, host objects,
+        network objects, or firewall address entries.
       parameters:
         - name: location
           in: query
@@ -74,23 +61,16 @@ paths:
             default: vsys1
       responses:
         '200':
-          description: Address objects returned successfully.
+          description: Address objects returned.
 
   /Objects/AddressGroups:
     get:
       operationId: ListAddressGroups
       summary: List Palo Alto address groups
       description: |
-        Retrieve all address groups configured in vsys1.
-
-        Use this operation when a user requests:
-        - List address groups
-        - Show address groups
-        - Display object groups
-        - Show members of address groups
-        - List AbuseCH_Blocked_IPs members
-
-        Returns group names and group membership.
+        Retrieve all address groups from vsys1.
+        Use when a user asks to list address groups, object groups,
+        group members, or AbuseCH_Blocked_IPs membership.
       parameters:
         - name: location
           in: query
@@ -106,4 +86,4 @@ paths:
             default: vsys1
       responses:
         '200':
-          description: Address groups returned successfully.
+          description: Address groups returned.
