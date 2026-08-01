@@ -1,113 +1,82 @@
 openapi: 3.0.1
 info:
-  title: Palo Alto PAN-OS Read-Only API
-  version: "1.1.0"
+  title: Palo Alto PAN-OS API
+  version: "1.2.0"
   description: >-
-    Read-only PAN-OS 11.1 REST API operations for listing security rules,
-    address objects, and address groups. Authentication is supplied by the
-    Security Copilot plugin in the X-PAN-KEY request header.
+    Microsoft Security Copilot plugin for Palo Alto PAN-OS 11.1.
+    Supports listing security rules, address objects, and address groups.
 servers:
   - url: http://57.167.90.200
 paths:
   /restapi/v11.1/Policies/SecurityRules:
     get:
       operationId: ListSecurityRules
-      summary: List PAN-OS security policy rules
-      description: >-
-        Lists security policy rules from the selected PAN-OS configuration
-        location and virtual system. Use this operation when the user asks to
-        list, show, retrieve, or review firewall or security rules.
+      tags:
+        - PaloAlto
+      summary: List firewall security rules
+      description: Retrieve security rules from PAN-OS.
       parameters:
         - $ref: '#/components/parameters/Location'
         - $ref: '#/components/parameters/Vsys'
       responses:
         '200':
-          description: Security rules returned successfully.
+          description: Success
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PanOsResponse'
-        '400':
-          description: Invalid request or query parameter.
-        '401':
-          description: API key missing or invalid.
-        '403':
-          description: The API account is not authorized for this operation.
-        '500':
-          description: PAN-OS returned an internal error.
+
   /restapi/v11.1/Objects/Addresses:
     get:
       operationId: ListAddressObjects
-      summary: List PAN-OS address objects
-      description: >-
-        Lists address objects from the selected PAN-OS configuration location
-        and virtual system. An exact object name can optionally be supplied.
+      tags:
+        - PaloAlto
+      summary: List address objects
+      description: Retrieve address objects from PAN-OS.
       parameters:
         - $ref: '#/components/parameters/Location'
         - $ref: '#/components/parameters/Vsys'
         - $ref: '#/components/parameters/ObjectName'
       responses:
         '200':
-          description: Address objects returned successfully.
+          description: Success
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PanOsResponse'
-        '400':
-          description: Invalid request or query parameter.
-        '401':
-          description: API key missing or invalid.
-        '403':
-          description: The API account is not authorized for this operation.
-        '500':
-          description: PAN-OS returned an internal error.
+
   /restapi/v11.1/Objects/AddressGroups:
     get:
       operationId: ListAddressGroups
-      summary: List PAN-OS address groups
-      description: >-
-        Lists address groups from the selected PAN-OS configuration location
-        and virtual system. An exact group name can optionally be supplied.
+      tags:
+        - PaloAlto
+      summary: List address groups
+      description: Retrieve address groups from PAN-OS.
       parameters:
         - $ref: '#/components/parameters/Location'
         - $ref: '#/components/parameters/Vsys'
         - $ref: '#/components/parameters/ObjectName'
       responses:
         '200':
-          description: Address groups returned successfully.
+          description: Success
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PanOsResponse'
-        '400':
-          description: Invalid request or query parameter.
-        '401':
-          description: API key missing or invalid.
-        '403':
-          description: The API account is not authorized for this operation.
-        '500':
-          description: PAN-OS returned an internal error.
+
 components:
   parameters:
     Location:
       in: query
       name: location
       required: true
-      description: >-
-        PAN-OS configuration location. Use vsys for a local firewall virtual
-        system. Use shared or device-group only when applicable to the target.
       schema:
         type: string
-        enum:
-          - vsys
-          - shared
-          - device-group
         default: vsys
     Vsys:
       in: query
       name: vsys
       required: true
-      description: Virtual system name, such as vsys1.
       schema:
         type: string
         default: vsys1
@@ -115,13 +84,11 @@ components:
       in: query
       name: name
       required: false
-      description: Optional exact address object or address group name.
       schema:
         type: string
   schemas:
     PanOsResponse:
       type: object
-      additionalProperties: true
       properties:
         '@status':
           type: string
@@ -129,4 +96,13 @@ components:
           type: string
         result:
           type: object
-          additionalProperties: true
+          properties:
+            '@total-count':
+              type: string
+            '@count':
+              type: string
+            entry:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
