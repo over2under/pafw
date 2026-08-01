@@ -7,7 +7,7 @@ info:
     address groups. Authentication is supplied by the Security Copilot manifest
     in the X-PAN-KEY header.
 servers:
-  - url: http://57.167.90.200
+  - url: https://57.167.90.200
 paths:
   /restapi/v11.1/Policies/SecurityRules:
     get:
