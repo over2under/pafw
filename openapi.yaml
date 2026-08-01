@@ -1,18 +1,20 @@
 openapi: 3.0.1
 info:
   title: Palo Alto Firewall Manager API
-  version: 4.0.0
+  version: 5.0.0
   description: |
-    Enumerate address objects, enumerate address groups, create address objects,
-    retrieve specific objects/groups, update address groups, and retrieve/update
-    security rules on a PAN-OS firewall.
+    Manage PAN-OS Security Rules, Address Objects, and Address Groups.
 servers:
   - url: https://57.167.90.200
+
 paths:
   /restapi/v11.1/Objects/Addresses:
     get:
       operationId: GetAddressObjects
-      summary: Get all address objects or a specific object
+      summary: List address objects or retrieve a specific address object
+      description: Return all address objects when name is omitted.
+      security:
+        - PanApiKey: []
       parameters:
         - $ref: '#/components/parameters/Location'
         - $ref: '#/components/parameters/Vsys'
@@ -28,9 +30,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AddressObjectResponse'
+
     post:
       operationId: CreateAddressObject
       summary: Create address object
+      security:
+        - PanApiKey: []
       requestBody:
         required: true
         content:
@@ -44,7 +49,10 @@ paths:
   /restapi/v11.1/Objects/AddressGroups:
     get:
       operationId: GetAddressGroups
-      summary: Get all address groups or a specific group
+      summary: List address groups or retrieve a specific address group
+      description: Return all address groups when name is omitted.
+      security:
+        - PanApiKey: []
       parameters:
         - $ref: '#/components/parameters/Location'
         - $ref: '#/components/parameters/Vsys'
@@ -60,9 +68,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AddressGroupResponse'
+
     put:
       operationId: UpdateAddressGroup
       summary: Update address group membership
+      security:
+        - PanApiKey: []
       requestBody:
         required: true
         content:
@@ -76,18 +87,20 @@ paths:
   /restapi/v11.1/Policies/SecurityRules:
     get:
       operationId: GetSecurityRules
-      summary: Get security rules
+      summary: List security rules
+      security:
+        - PanApiKey: []
       responses:
         '200':
           description: Security rules returned
-    put:
-      operationId: UpdateSecurityRule
-      summary: Update security rule
-      responses:
-        '200':
-          description: Security rule updated
 
 components:
+  securitySchemes:
+    PanApiKey:
+      type: apiKey
+      in: header
+      name: X-PAN-KEY
+
   parameters:
     Location:
       name: location
@@ -109,6 +122,8 @@ components:
     AddressObjectResponse:
       type: object
       properties:
+        '@status': {type: string}
+        '@code': {type: string}
         result:
           type: object
           properties:
@@ -117,14 +132,16 @@ components:
               items:
                 type: object
                 properties:
-                  '@name':
-                    type: string
-                  'ip-netmask':
-                    type: string
+                  '@name': {type: string}
+                  '@location': {type: string}
+                  '@vsys': {type: string}
+                  ip-netmask: {type: string}
 
     AddressGroupResponse:
       type: object
       properties:
+        '@status': {type: string}
+        '@code': {type: string}
         result:
           type: object
           properties:
@@ -133,8 +150,9 @@ components:
               items:
                 type: object
                 properties:
-                  '@name':
-                    type: string
+                  '@name': {type: string}
+                  '@location': {type: string}
+                  '@vsys': {type: string}
                   static:
                     type: object
                     properties:
