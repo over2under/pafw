@@ -1,44 +1,174 @@
 openapi: 3.0.1
 info:
-  title: Palo Alto Firewall Manager
-  version: 4.0.0
+  title: Palo Alto Firewall Manager API
+  version: 5.0.0
+  description: |
+    Manage PAN-OS Security Rules, Address Objects, and Address Groups.
 servers:
   - url: https://57.167.90.200
+
 paths:
-  /restapi/v11.1/Policies/SecurityRules:
-    get:
-      operationId: GetSecurityRules
-      summary: Get security rules
-      security: [{PanApiKey: []}]
-    put:
-      operationId: UpdateSecurityRule
-      summary: Update security rule
-      security: [{PanApiKey: []}]
   /restapi/v11.1/Objects/Addresses:
     get:
       operationId: GetAddressObjects
-      summary: Get address objects
-      security: [{PanApiKey: []}]
+      summary: List address objects or retrieve a specific address object
+      description: Return all address objects when name is omitted.
+      security:
+        - PanApiKey: []
+      parameters:
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Address objects returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressObjectResponse'
+
     post:
       operationId: CreateAddressObject
       summary: Create address object
-      security: [{PanApiKey: []}]
-    put:
-      operationId: UpdateAddressObject
-      summary: Update address object
-      security: [{PanApiKey: []}]
+      security:
+        - PanApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAddressRequest'
+      responses:
+        '200':
+          description: Address object created
+
   /restapi/v11.1/Objects/AddressGroups:
     get:
       operationId: GetAddressGroups
-      summary: Get address groups
-      security: [{PanApiKey: []}]
+      summary: List address groups or retrieve a specific address group
+      description: Return all address groups when name is omitted.
+      security:
+        - PanApiKey: []
+      parameters:
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Address groups returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressGroupResponse'
+
     put:
       operationId: UpdateAddressGroup
-      summary: Update address group
-      security: [{PanApiKey: []}]
+      summary: Update address group membership
+      security:
+        - PanApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAddressGroupRequest'
+      responses:
+        '200':
+          description: Address group updated
+
+  /restapi/v11.1/Policies/SecurityRules:
+    get:
+      operationId: GetSecurityRules
+      summary: List security rules
+      security:
+        - PanApiKey: []
+      responses:
+        '200':
+          description: Security rules returned
+
 components:
   securitySchemes:
     PanApiKey:
       type: apiKey
       in: header
       name: X-PAN-KEY
+
+  parameters:
+    Location:
+      name: location
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [vsys, shared]
+        default: vsys
+    Vsys:
+      name: vsys
+      in: query
+      required: false
+      schema:
+        type: string
+        default: vsys1
+
+  schemas:
+    AddressObjectResponse:
+      type: object
+      properties:
+        '@status': {type: string}
+        '@code': {type: string}
+        result:
+          type: object
+          properties:
+            entry:
+              type: array
+              items:
+                type: object
+                properties:
+                  '@name': {type: string}
+                  '@location': {type: string}
+                  '@vsys': {type: string}
+                  ip-netmask: {type: string}
+
+    AddressGroupResponse:
+      type: object
+      properties:
+        '@status': {type: string}
+        '@code': {type: string}
+        result:
+          type: object
+          properties:
+            entry:
+              type: array
+              items:
+                type: object
+                properties:
+                  '@name': {type: string}
+                  '@location': {type: string}
+                  '@vsys': {type: string}
+                  static:
+                    type: object
+                    properties:
+                      member:
+                        type: array
+                        items:
+                          type: string
+
+    CreateAddressRequest:
+      type: object
+      properties:
+        entry:
+          type: array
+
+    UpdateAddressGroupRequest:
+      type: object
+      properties:
+        entry:
+          type: array
