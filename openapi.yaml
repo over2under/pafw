@@ -1,0 +1,119 @@
+openapi: 3.0.1
+info:
+  title: Palo Alto PAN-OS Read-Only API
+  version: "1.0.0"
+  description: >-
+    Read-only operations for PAN-OS 11.1 security rules, address objects, and
+    address groups. Authentication is supplied by the Security Copilot manifest
+    in the X-PAN-KEY header.
+servers:
+  - url: https://57.167.90.200
+paths:
+  /restapi/v11.1/Policies/SecurityRules:
+    get:
+      operationId: ListSecurityRules
+      summary: List existing PAN-OS security policy rules
+      description: >-
+        Returns security policy rules for the specified virtual system.
+        #ExamplePrompts List all firewall security rules in vsys1.
+      parameters:
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
+      responses:
+        '200':
+          description: Security rules returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanOsResponse'
+        '400': { description: Invalid request. }
+        '401': { description: Missing or invalid API key. }
+        '403': { description: API key lacks permission. }
+        '500': { description: PAN-OS server error. }
+  /restapi/v11.1/Objects/Addresses:
+    get:
+      operationId: ListAddressObjects
+      summary: List existing PAN-OS address objects
+      description: >-
+        Returns address objects for the specified virtual system.
+        #ExamplePrompts List all address objects in vsys1.
+      parameters:
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
+        - in: query
+          name: name
+          required: false
+          description: Optional exact address object name.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Address objects returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanOsResponse'
+        '400': { description: Invalid request. }
+        '401': { description: Missing or invalid API key. }
+        '403': { description: API key lacks permission. }
+        '500': { description: PAN-OS server error. }
+  /restapi/v11.1/Objects/AddressGroups:
+    get:
+      operationId: ListAddressGroups
+      summary: List existing PAN-OS address groups
+      description: >-
+        Returns address groups for the specified virtual system. Use the optional
+        name parameter to retrieve AbuseCH_Blocked_IPs specifically.
+        #ExamplePrompts List all address groups in vsys1.
+        #ExamplePrompts Get the address group named AbuseCH_Blocked_IPs in vsys1.
+      parameters:
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
+        - in: query
+          name: name
+          required: false
+          description: Optional exact address group name.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Address groups returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanOsResponse'
+        '400': { description: Invalid request. }
+        '401': { description: Missing or invalid API key. }
+        '403': { description: API key lacks permission. }
+        '500': { description: PAN-OS server error. }
+components:
+  parameters:
+    Location:
+      in: query
+      name: location
+      required: true
+      description: PAN-OS configuration location. For a local firewall virtual system, use vsys.
+      schema:
+        type: string
+        default: vsys
+        enum: [vsys, shared, device-group]
+    Vsys:
+      in: query
+      name: vsys
+      required: true
+      description: Virtual system name, such as vsys1.
+      schema:
+        type: string
+        default: vsys1
+  schemas:
+    PanOsResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        '@status':
+          type: string
+        '@code':
+          type: string
+        result:
+          type: object
+          additionalProperties: true
