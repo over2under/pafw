@@ -1,73 +1,258 @@
-openapi: 3.0.0
+openapi: 3.0.1
 info:
-  title: Palo Alto PAN-OS Firewall Rules API
-  description: Read-only API definition for listing PAN-OS security policy rules.
-  version: "1.0.0"
+  title: Palo Alto AbuseCH Address Object API
+  version: 3.0.0
+  description: |
+    Creates IPv4 address objects and adds them to the existing static address group
+    AbuseCH_Blocked_IPs on a PAN-OS firewall. For an IPv4 address such as 198.51.100.10,
+    use 198.51.100.10 as the object name and 198.51.100.10/32 as the ip-netmask value.
+    The safe workflow is: check whether the address object exists, create it if absent,
+    retrieve the complete AbuseCH_Blocked_IPs group, append the object name only if it is
+    not already present, and PUT the complete group while preserving every existing member.
+    Do not replace or remove existing group members. Changes remain in the candidate
+    configuration until committed separately.
+
 servers:
   - url: https://57.167.90.200
+
 paths:
-  /restapi/v11.1/Policies/SecurityRules:
+  /restapi/v11.1/Objects/Addresses:
     get:
-      operationId: ListPaloAltoSecurityRules
-      summary: List Palo Alto firewall security policy rules
-      description: |-
-        Retrieves security policy rules from the selected PAN-OS virtual system.
-        #ExamplePrompts List the Palo Alto firewall security rules in vsys1.
-        #ExamplePrompts Show all security policy rules configured on the Palo Alto firewall.
-        #ExamplePrompts Retrieve the firewall rule named Block-Malicious-IP from vsys1.
+      operationId: GetAddressObject
+      summary: Check whether an IPv4 address object already exists
+      security:
+        - PanApiKey: []
       parameters:
-        - name: location
-          in: query
-          required: true
-          description: PAN-OS configuration location. Use vsys for a firewall virtual system.
-          schema:
-            type: string
-            enum:
-              - vsys
-            default: vsys
-        - name: vsys
-          in: query
-          required: true
-          description: Virtual system that contains the security rules.
-          schema:
-            type: string
-            default: vsys1
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
         - name: name
           in: query
-          required: false
-          description: Optional exact security rule name to retrieve.
+          required: true
+          description: Exact address object name, which must be the IPv4 address without /32.
           schema:
-            type: string
+            $ref: '#/components/schemas/IPv4Address'
       responses:
-        "200":
-          description: Security rules returned successfully.
+        '200':
+          description: Address object returned
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PanOsResponse"
-        "400":
-          description: The request parameters are invalid.
-        "401":
-          description: The API key is missing or invalid.
-        "403":
-          description: The API administrator does not have permission to read the requested configuration.
-        "404":
-          description: The requested PAN-OS REST resource was not found.
-        "500":
-          description: The firewall returned an internal server error.
+                $ref: '#/components/schemas/PanOsResponse'
+        '404':
+          description: Address object does not exist
+
+    post:
+      operationId: CreateAddressObjectForBlockedIP
+      summary: Create an address object named exactly as the IPv4 address
+      description: |
+        Create one IPv4 host address object. The name query parameter and entry @name must
+        both be the IPv4 address without a CIDR suffix. The ip-netmask field must contain
+        the same IPv4 address with /32 appended. Do not create the object if it already exists.
+      security:
+        - PanApiKey: []
+      parameters:
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
+        - name: name
+          in: query
+          required: true
+          description: IPv4 address used verbatim as the object name, without /32.
+          schema:
+            $ref: '#/components/schemas/IPv4Address'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAddressRequest'
+      responses:
+        '200':
+          description: Address object created in the candidate configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanOsResponse'
+        '400':
+          description: Invalid object definition
+        '401':
+          description: Invalid or missing API key
+        '403':
+          description: API administrator is not authorized
+        '409':
+          description: Address object already exists
+
+  /restapi/v11.1/Objects/AddressGroups:
+    get:
+      operationId: GetAbuseCHBlockedAddressGroup
+      summary: Retrieve the complete AbuseCH_Blocked_IPs static address group
+      description: |
+        Retrieve the group before adding a member. Preserve the full existing static.member
+        array and all other returned properties when preparing the update.
+      security:
+        - PanApiKey: []
+      parameters:
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
+        - $ref: '#/components/parameters/AbuseCHGroupName'
+      responses:
+        '200':
+          description: Address group returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanOsResponse'
+        '404':
+          description: AbuseCH_Blocked_IPs was not found
+
+    put:
+      operationId: AddObjectToAbuseCHBlockedAddressGroup
+      summary: Add an address object to AbuseCH_Blocked_IPs without removing existing members
+      description: |
+        Update the existing AbuseCH_Blocked_IPs static address group. First retrieve the group.
+        Append the new address object name to static.member only when it is not already present.
+        Send the complete group definition and preserve all existing members and properties.
+        Never submit a payload containing only the new member. Require explicit user approval
+        of the IP address and proposed membership change before invoking this operation.
+      security:
+        - PanApiKey: []
+      parameters:
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
+        - $ref: '#/components/parameters/AbuseCHGroupName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAddressGroupRequest'
+      responses:
+        '200':
+          description: Address group updated in the candidate configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanOsResponse'
+        '400':
+          description: Invalid or incomplete address group definition
+        '401':
+          description: Invalid or missing API key
+        '403':
+          description: API administrator is not authorized
+        '404':
+          description: AbuseCH_Blocked_IPs was not found
+
 components:
+  securitySchemes:
+    PanApiKey:
+      type: apiKey
+      in: header
+      name: X-PAN-KEY
+
+  parameters:
+    Location:
+      name: location
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [vsys]
+        default: vsys
+    Vsys:
+      name: vsys
+      in: query
+      required: true
+      schema:
+        type: string
+        default: vsys1
+    AbuseCHGroupName:
+      name: name
+      in: query
+      required: true
+      description: Existing static address group. Always use AbuseCH_Blocked_IPs.
+      schema:
+        type: string
+        enum: [AbuseCH_Blocked_IPs]
+        default: AbuseCH_Blocked_IPs
+
   schemas:
+    IPv4Address:
+      type: string
+      format: ipv4
+      pattern: '^(?:(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.){3}(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})$'
+      example: 198.51.100.10
+
+    CreateAddressRequest:
+      type: object
+      required: [entry]
+      properties:
+        entry:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            type: object
+            required: ['@location', '@name', ip-netmask]
+            properties:
+              '@location':
+                type: string
+                enum: [vsys]
+                default: vsys
+              '@vsys':
+                type: string
+                default: vsys1
+              '@name':
+                $ref: '#/components/schemas/IPv4Address'
+              ip-netmask:
+                type: string
+                description: Same IPv4 address as @name with /32 appended.
+                pattern: '^(?:(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.){3}(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})/32$'
+                example: 198.51.100.10/32
+              description:
+                type: string
+                default: Blocked from Abuse.ch threat intelligence
+            additionalProperties: true
+
+    UpdateAddressGroupRequest:
+      type: object
+      required: [entry]
+      properties:
+        entry:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            type: object
+            required: ['@location', '@name', static]
+            properties:
+              '@location':
+                type: string
+                enum: [vsys]
+                default: vsys
+              '@vsys':
+                type: string
+                default: vsys1
+              '@name':
+                type: string
+                enum: [AbuseCH_Blocked_IPs]
+              static:
+                type: object
+                required: [member]
+                properties:
+                  member:
+                    type: array
+                    minItems: 1
+                    uniqueItems: true
+                    description: Complete existing member list plus the new IPv4-named address object.
+                    items:
+                      type: string
+                additionalProperties: false
+              description:
+                type: string
+              tag:
+                type: object
+                additionalProperties: true
+            additionalProperties: true
+
     PanOsResponse:
       type: object
       additionalProperties: true
-      properties:
-        _request:
-          type: object
-          additionalProperties: true
-        result:
-          type: object
-          additionalProperties: true
-        success:
-          type: boolean
-        message:
-          type: string
