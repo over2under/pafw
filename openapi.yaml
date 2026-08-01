@@ -3,10 +3,11 @@ info:
   title: Palo Alto PAN-OS API
   version: "1.2.0"
   description: >-
-    Read and write operations for PAN-OS 11.1 security rules, address objects,
-    and address groups.
+    Read and write operations for PAN-OS 11.1 security rules, address objects, and
+    address groups. Authentication is supplied by the Security Copilot manifest
+    in the X-PAN-KEY header.
 servers:
-  - url: http://57.167.90.200
+  - url: https://firewall.example.com
 paths:
   /restapi/v11.1/Policies/SecurityRules:
     get:
