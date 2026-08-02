@@ -1,26 +1,26 @@
 openapi: 3.0.1
 info:
-  title: Palo Alto PAN-OS Read-Only API
-  version: "1.2.0"
+  title: Palo Alto PAN-OS Firewall Management API
+  version: "2.0.0"
   description: >-
-    Read-only PAN-OS 11.1 REST API operations for listing security rules,
-    address objects, and address groups over HTTP. Authentication is supplied
-    by the Security Copilot plugin in the X-PAN-KEY request header.
+    PAN-OS 11.1 REST API operations for listing security rules, address objects,
+    and address groups, plus definitions for creating IPv4 address objects and
+    updating the existing AbuseCH_Blocked_IPs static address group. Authentication
+    is supplied by the Security Copilot plugin in the X-PAN-KEY request header.
 servers:
   - url: http://57.167.90.200
-    description: Palo Alto PAN-OS management REST API over HTTP
+    description: Palo Alto PAN-OS management REST API
 paths:
   /restapi/v11.1/Policies/SecurityRules:
     get:
       operationId: ListSecurityRules
-      tags:
-        - PaloAlto
+      tags: [PaloAlto]
       summary: List Palo Alto PAN-OS firewall security rules
       description: >-
-        Lists security policy rules from the selected PAN-OS configuration
-        location and virtual system. Use this operation when the user asks to
-        list, show, retrieve, inspect, or review Palo Alto firewall rules,
-        security rules, security policies, or rulebase entries.
+        Lists security policy rules from the selected PAN-OS configuration location
+        and virtual system. Use when the user asks to list, show, retrieve, inspect,
+        or review Palo Alto firewall rules, security rules, security policies, or
+        rulebase entries.
       parameters:
         - $ref: '#/components/parameters/Location'
         - $ref: '#/components/parameters/Vsys'
@@ -31,30 +31,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PanOsResponse'
-        '400':
-          description: Invalid request or query parameter.
-        '401':
-          description: API key missing or invalid.
-        '403':
-          description: The API account is not authorized for this operation.
-        '500':
-          description: PAN-OS returned an internal error.
+        '400': {description: Invalid request or query parameter.}
+        '401': {description: API key missing or invalid.}
+        '403': {description: API account is not authorized for this operation.}
+        '500': {description: PAN-OS returned an internal error.}
 
   /restapi/v11.1/Objects/Addresses:
     get:
       operationId: ListAddressObjects
-      tags:
-        - PaloAlto
+      tags: [PaloAlto]
       summary: List Palo Alto PAN-OS address objects
       description: >-
-        Lists address objects from the selected PAN-OS configuration location
-        and virtual system. Use this operation when the user asks for Palo Alto
-        address objects, IP objects, host objects, FQDN objects, or network
-        objects. An exact object name can optionally be supplied.
+        Lists address objects from the selected PAN-OS configuration location and
+        virtual system. Use when the user asks for address objects, IP objects, host
+        objects, FQDN objects, or network objects. An exact object name is optional.
       parameters:
         - $ref: '#/components/parameters/Location'
         - $ref: '#/components/parameters/Vsys'
-        - $ref: '#/components/parameters/ObjectName'
+        - $ref: '#/components/parameters/ObjectNameOptional'
       responses:
         '200':
           description: Address objects returned successfully.
@@ -62,30 +56,65 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PanOsResponse'
-        '400':
-          description: Invalid request or query parameter.
-        '401':
-          description: API key missing or invalid.
-        '403':
-          description: The API account is not authorized for this operation.
-        '500':
-          description: PAN-OS returned an internal error.
+        '400': {description: Invalid request or query parameter.}
+        '401': {description: API key missing or invalid.}
+        '403': {description: API account is not authorized for this operation.}
+        '500': {description: PAN-OS returned an internal error.}
+    post:
+      operationId: CreateAddressObject
+      tags: [PaloAlto]
+      summary: Create a Palo Alto PAN-OS IPv4 address object
+      description: >-
+        Defines a request to create one IPv4 address object. Convert the supplied
+        IPv4 CIDR to the object name by replacing dots with underscores and the
+        slash with a hyphen. Example: 192.168.10.100/32 becomes
+        192_168_10_100-32. Send that derived value in the name query parameter and
+        as entry[0].@name. Send the original CIDR in entry[0].ip-netmask. This
+        operation changes candidate configuration and requires a separate commit.
+      parameters:
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
+        - $ref: '#/components/parameters/ObjectNameRequired'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAddressObjectRequest'
+            example:
+              entry:
+                - '@location': vsys
+                  '@name': 192_168_10_100-32
+                  '@vsys': vsys1
+                  ip-netmask: 192.168.10.100/32
+      responses:
+        '200':
+          description: Address object creation request accepted by PAN-OS.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanOsResponse'
+        '400': {description: Invalid request, object name, CIDR, or query parameter.}
+        '401': {description: API key missing or invalid.}
+        '403': {description: API account is not authorized to create address objects.}
+        '409': {description: An address object with the same name already exists.}
+        '500': {description: PAN-OS returned an internal error.}
 
   /restapi/v11.1/Objects/AddressGroups:
     get:
       operationId: ListAddressGroups
-      tags:
-        - PaloAlto
+      tags: [PaloAlto]
       summary: List Palo Alto PAN-OS address groups
       description: >-
-        Lists address groups from the selected PAN-OS configuration location
-        and virtual system. Use this operation when the user asks for Palo Alto
-        address groups or object groups. An exact group name can optionally be
-        supplied.
+        Lists address groups from the selected PAN-OS configuration location and
+        virtual system. Use when the user asks for Palo Alto address groups or
+        object groups. An exact group name is optional. Retrieve
+        AbuseCH_Blocked_IPs before updating it so all current static members can be
+        preserved.
       parameters:
         - $ref: '#/components/parameters/Location'
         - $ref: '#/components/parameters/Vsys'
-        - $ref: '#/components/parameters/ObjectName'
+        - $ref: '#/components/parameters/ObjectNameOptional'
       responses:
         '200':
           description: Address groups returned successfully.
@@ -93,14 +122,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PanOsResponse'
-        '400':
-          description: Invalid request or query parameter.
-        '401':
-          description: API key missing or invalid.
-        '403':
-          description: The API account is not authorized for this operation.
-        '500':
-          description: PAN-OS returned an internal error.
+        '400': {description: Invalid request or query parameter.}
+        '401': {description: API key missing or invalid.}
+        '403': {description: API account is not authorized for this operation.}
+        '500': {description: PAN-OS returned an internal error.}
+    put:
+      operationId: UpdateAbuseCHBlockedIPsAddressGroup
+      tags: [PaloAlto]
+      summary: Replace the membership of the existing AbuseCH_Blocked_IPs static address group
+      description: >-
+        Defines a request to update the existing static address group named
+        AbuseCH_Blocked_IPs. The PAN-OS PUT operation replaces the group's static
+        member definition, so first retrieve the group and send every existing
+        member plus the newly created address-object name exactly once. Always set
+        the name query parameter and entry[0].@name to AbuseCH_Blocked_IPs. This
+        operation changes candidate configuration and requires a separate commit.
+      parameters:
+        - $ref: '#/components/parameters/Location'
+        - $ref: '#/components/parameters/Vsys'
+        - $ref: '#/components/parameters/BlockedGroupName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAddressGroupRequest'
+            example:
+              entry:
+                - '@location': vsys
+                  '@name': AbuseCH_Blocked_IPs
+                  '@vsys': vsys1
+                  static:
+                    member:
+                      - Existing_Object
+                      - 192_168_10_100-32
+      responses:
+        '200':
+          description: Address-group update request accepted by PAN-OS.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PanOsResponse'
+        '400': {description: Invalid request, member list, or query parameter.}
+        '401': {description: API key missing or invalid.}
+        '403': {description: API account is not authorized to update address groups.}
+        '404': {description: AbuseCH_Blocked_IPs was not found.}
+        '500': {description: PAN-OS returned an internal error.}
 
 components:
   parameters:
@@ -109,44 +176,114 @@ components:
       name: location
       required: true
       description: >-
-        PAN-OS configuration location. Use vsys for a standalone firewall
-        virtual system. Use shared or device-group only when applicable.
+        PAN-OS configuration location. Use vsys for a standalone firewall virtual
+        system. Use shared or device-group only when applicable.
       schema:
         type: string
-        enum:
-          - vsys
-          - shared
-          - device-group
+        enum: [vsys, shared, device-group]
         default: vsys
-
     Vsys:
       in: query
       name: vsys
-      required: true
-      description: >-
-        PAN-OS virtual system name. For a standalone firewall, use vsys1 unless
-        another virtual system is required.
+      required: false
+      description: Virtual system name when location is vsys.
       schema:
         type: string
         default: vsys1
-
-    ObjectName:
+    ObjectNameOptional:
       in: query
       name: name
       required: false
-      description: Optional exact address object or address group name.
+      description: Exact address object or address group name to retrieve.
       schema:
         type: string
-
+    ObjectNameRequired:
+      in: query
+      name: name
+      required: true
+      description: >-
+        Derived address-object name. Replace dots in the IPv4 address with
+        underscores and replace the CIDR slash with a hyphen. Example:
+        192_168_10_100-32.
+      schema:
+        type: string
+        pattern: '^[0-9]{1,3}(?:_[0-9]{1,3}){3}-[0-9]{1,2}$'
+    BlockedGroupName:
+      in: query
+      name: name
+      required: true
+      description: Existing static address group. Must be AbuseCH_Blocked_IPs.
+      schema:
+        type: string
+        enum: [AbuseCH_Blocked_IPs]
+        default: AbuseCH_Blocked_IPs
   schemas:
     PanOsResponse:
       type: object
       additionalProperties: true
       properties:
-        '@status':
-          type: string
-        '@code':
-          type: string
+        '@status': {type: string}
+        '@code': {type: string}
+        msg: {type: string}
         result:
           type: object
           additionalProperties: true
+    CreateAddressObjectRequest:
+      type: object
+      required: [entry]
+      properties:
+        entry:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            type: object
+            required: ['@name', ip-netmask]
+            properties:
+              '@location':
+                type: string
+                enum: [vsys, shared, device-group]
+              '@name':
+                type: string
+                description: Must match the name query parameter.
+              '@vsys':
+                type: string
+                default: vsys1
+              ip-netmask:
+                type: string
+                description: Original IPv4 CIDR, for example 192.168.10.100/32.
+                pattern: '^(?:[0-9]{1,3}\.){3}[0-9]{1,3}/(?:[0-9]|[12][0-9]|3[0-2])$'
+    UpdateAddressGroupRequest:
+      type: object
+      required: [entry]
+      properties:
+        entry:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            type: object
+            required: ['@name', static]
+            properties:
+              '@location':
+                type: string
+                enum: [vsys, shared, device-group]
+              '@name':
+                type: string
+                enum: [AbuseCH_Blocked_IPs]
+              '@vsys':
+                type: string
+                default: vsys1
+              static:
+                type: object
+                required: [member]
+                properties:
+                  member:
+                    type: array
+                    minItems: 1
+                    uniqueItems: true
+                    description: >-
+                      Complete replacement member list containing all existing
+                      members and the new address-object name exactly once.
+                    items:
+                      type: string
