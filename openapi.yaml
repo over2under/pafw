@@ -7,7 +7,7 @@ info:
     address objects, and address groups over HTTP. Authentication is supplied
     by the Security Copilot plugin in the X-PAN-KEY request header.
 servers:
-  - url: http://pa-fw.contoso.com
+  - url: http://57.167.90.200
     description: Palo Alto PAN-OS management REST API over HTTP
 paths:
   /restapi/v11.1/Policies/SecurityRules:
